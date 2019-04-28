@@ -29,8 +29,24 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         _ output: AVCaptureOutput,
         didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection) {
-        // here we can process the frame
-        print("did receive frame")
+        
+        guard let  imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        CVPixelBufferLockBaseAddress(imageBuffer, CVPixelBufferLockFlags.readOnly)
+        let baseAddress = CVPixelBufferGetBaseAddress(imageBuffer)
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer)
+        let width = CVPixelBufferGetWidth(imageBuffer)
+        let height = CVPixelBufferGetHeight(imageBuffer)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        var bitmapInfo: UInt32 = CGBitmapInfo.byteOrder32Little.rawValue
+        bitmapInfo |= CGImageAlphaInfo.premultipliedFirst.rawValue & CGBitmapInfo.alphaInfoMask.rawValue
+        let context = CGContext(data: baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: colorSpace, bitmapInfo: bitmapInfo)
+        guard let quartzImage = context?.makeImage() else { return }
+        CVPixelBufferUnlockBaseAddress(imageBuffer, CVPixelBufferLockFlags.readOnly)
+        let image = UIImage(cgImage: quartzImage)
+        
+        let imageWithLaneOverlay = LaneDetectorBridge().detectLane(in: image)
+        
+        
     }
     
     // MARK: - Private functions
