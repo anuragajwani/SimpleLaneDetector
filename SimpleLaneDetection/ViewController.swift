@@ -11,6 +11,8 @@ import AVFoundation
 
 class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
     
+    @IBOutlet weak var imageView: UIImageView!
+    
     private var captureSession: AVCaptureSession = AVCaptureSession()
     private let videoDataOutput = AVCaptureVideoDataOutput()
 
@@ -46,7 +48,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         
         let imageWithLaneOverlay = LaneDetectorBridge().detectLane(in: image)
         
-        
+        DispatchQueue.main.async {
+            self.imageView.image = imageWithLaneOverlay
+        }
     }
     
     // MARK: - Private functions
